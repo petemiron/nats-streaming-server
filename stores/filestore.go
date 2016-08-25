@@ -270,8 +270,8 @@ type FileSubStore struct {
 // of files for a MsgStore on a given channel).
 type fileSlice struct {
 	fileName  string
-	firstMsg  *pb.MsgProto
-	lastMsg   *pb.MsgProto
+	firstSeq  uint64
+	lastSeq   uint64
 	msgsCount int
 	msgsSize  uint64
 	file      *os.File // Used during lookups.
@@ -1030,10 +1030,10 @@ func (ms *FileMsgStore) recoverOneMsgFile(file *os.File, numFile int) error {
 			break
 		}
 
-		if fslice.firstMsg == nil {
-			fslice.firstMsg = msg
+		if fslice.firstSeq == 0 {
+			fslice.firstSeq = msg.Sequence
 		}
-		fslice.lastMsg = msg
+		fslice.lastSeq = msg.Sequence
 		fslice.msgsCount++
 		fslice.msgsSize += uint64(msgSize)
 
@@ -1041,6 +1041,7 @@ func (ms *FileMsgStore) recoverOneMsgFile(file *os.File, numFile int) error {
 			ms.first = msg.Sequence
 			ms.firstMsg = msg
 		}
+		ms.lastMsg = msg
 		mrec := &msgRecord{offset: offset, timestamp: msg.Timestamp, msgSize: uint32(msgSize)}
 		ms.msgs[msg.Sequence] = mrec
 		if cache {
@@ -1054,8 +1055,7 @@ func (ms *FileMsgStore) recoverOneMsgFile(file *os.File, numFile int) error {
 	// Do more accounting and bump the current slice index if we recovered
 	// at least one message on that file.
 	if err == nil && fslice.msgsCount > 0 {
-		ms.last = fslice.lastMsg.Sequence
-		ms.lastMsg = fslice.lastMsg
+		ms.last = fslice.lastSeq
 		ms.totalCount += fslice.msgsCount
 		ms.totalBytes += fslice.msgsSize
 		ms.currSliceIdx = numFile
@@ -1185,11 +1185,11 @@ func (ms *FileMsgStore) Store(reply string, data []byte) (*pb.MsgProto, error) {
 	fslice.msgsCount++
 	fslice.msgsSize += uint64(msgSize)
 
-	// Save references to first and last message for this slice
-	if fslice.firstMsg == nil {
-		fslice.firstMsg = m
+	// Save references to first and last sequences for this slice
+	if fslice.firstSeq == 0 {
+		fslice.firstSeq = seq
 	}
-	fslice.lastMsg = m
+	fslice.lastSeq = seq
 
 	// Enfore limits and update file slice if needed.
 	if err := ms.enforceLimits(); err != nil {
@@ -1201,6 +1201,15 @@ func (ms *FileMsgStore) Store(reply string, data []byte) (*pb.MsgProto, error) {
 // enforceLimits checks total counts with current msg store's limits,
 // removing a file slice and/or updating slices' count as necessary.
 func (ms *FileMsgStore) enforceLimits() error {
+	msFirstEntering := ms.first
+	// If ms.first changes in this function, make sure we
+	// update ms.firstMsg
+	defer func() {
+		if ms.first != msFirstEntering {
+			ms.firstMsg = ms.lookup(ms.first)
+		}
+	}()
+
 	// We may inspect several slices, start with the first at index 0.
 	idx := 0
 	// Check if we need to remove any (but leave at least the last added).
@@ -1213,7 +1222,7 @@ func (ms *FileMsgStore) enforceLimits() error {
 		// slice we are inspecting
 		slice := ms.files[idx]
 		// Size of the first message in this slice
-		firstMsgSize := uint64(slice.firstMsg.Size())
+		firstMsgSize := uint64(ms.msgs[slice.firstSeq].msgSize)
 		// Update slice and total counts
 		slice.msgsCount--
 		slice.msgsSize -= firstMsgSize
@@ -1229,7 +1238,6 @@ func (ms *FileMsgStore) enforceLimits() error {
 
 		// Messages sequence is incremental with no gap on a given msgstore.
 		ms.first++
-		ms.firstMsg = ms.lookup(ms.first)
 		// Is file slice "empty"
 		if slice.msgsCount == 0 {
 			// If we are at the last file slice, remove the first.
@@ -1244,8 +1252,8 @@ func (ms *FileMsgStore) enforceLimits() error {
 				idx = 0
 			} else {
 				// No more message...
-				slice.firstMsg = nil
-				slice.lastMsg = nil
+				slice.firstSeq = 0
+				slice.lastSeq = 0
 
 				// We move the index to check the other slices if needed.
 				idx++
@@ -1256,7 +1264,7 @@ func (ms *FileMsgStore) enforceLimits() error {
 			}
 		} else {
 			// This is the new first message in this slice.
-			slice.firstMsg = ms.firstMsg
+			slice.firstSeq = ms.first
 		}
 	}
 	return nil
@@ -1293,18 +1301,18 @@ func (ms *FileMsgStore) removeAndShiftFiles() error {
 			ms.totalBytes -= file1.msgsSize
 
 			// Remove all messages from first file from our cache
-			seqStart := file1.firstMsg.Sequence
-			seqEnd := file1.lastMsg.Sequence
+			seqStart := file1.firstSeq
+			seqEnd := file1.lastSeq
 			for i := seqStart; i <= seqEnd; i++ {
 				delete(ms.msgs, i)
 			}
 			// Update sequence of first available message
-			ms.first = file2.firstMsg.Sequence
+			ms.first = file2.firstSeq
 		}
 
 		// Copy over values from the next slice
-		file1.firstMsg = file2.firstMsg
-		file1.lastMsg = file2.lastMsg
+		file1.firstSeq = file2.firstSeq
+		file1.lastSeq = file2.lastSeq
 		file1.msgsCount = file2.msgsCount
 		file1.msgsSize = file2.msgsSize
 	}
@@ -1321,8 +1329,8 @@ func (ms *FileMsgStore) removeAndShiftFiles() error {
 		return err
 	}
 	// Reset the last slice's counts.
-	fslice.firstMsg = nil
-	fslice.lastMsg = nil
+	fslice.firstSeq = 0
+	fslice.lastSeq = 0
 	fslice.msgsCount = 0
 	fslice.msgsSize = uint64(0)
 
@@ -1342,13 +1350,13 @@ func (ms *FileMsgStore) removeAndShiftFiles() error {
 func (ms *FileMsgStore) getFileForSeq(seq uint64) (*os.File, error) {
 	// Start with current slice
 	slice := ms.files[ms.currSliceIdx]
-	if (slice.firstMsg.Sequence <= seq) && (seq <= slice.lastMsg.Sequence) {
+	if (slice.firstSeq <= seq) && (seq <= slice.lastSeq) {
 		return ms.file, nil
 	}
 	// Check all previous slices
 	for i := 0; i < ms.currSliceIdx; i++ {
 		slice = ms.files[i]
-		if (slice.firstMsg.Sequence <= seq) && (seq <= slice.lastMsg.Sequence) {
+		if (slice.firstSeq <= seq) && (seq <= slice.lastSeq) {
 			file := slice.file
 			if file == nil {
 				var err error
