@@ -1362,29 +1362,33 @@ func (ms *FileMsgStore) Store(reply string, data []byte) (*pb.MsgProto, error) {
 
 	fslice := ms.files[ms.currSliceIdx]
 
-	// Check if we need to move to next file slice
-	if (ms.currSliceIdx < numFiles-1) &&
-		((fslice.msgsCount >= ms.limits.MaxNumMsgs/(numFiles-1)) ||
-			(fslice.msgsSize >= ms.limits.MaxMsgBytes/(numFiles-1))) {
+	maxMsgs := ms.limits.MaxNumMsgs
+	maxBytes := ms.limits.MaxMsgBytes
+	if maxMsgs > 0 && maxBytes > 0 {
+		// Check if we need to move to next file slice
+		if (ms.currSliceIdx < numFiles-1) &&
+			((fslice.msgsCount >= ms.limits.MaxNumMsgs/(numFiles-1)) ||
+				(fslice.msgsSize >= ms.limits.MaxMsgBytes/(numFiles-1))) {
 
-		// Don't change store variable until success...
-		nextSlice := ms.currSliceIdx + 1
+			// Don't change store variable until success...
+			nextSlice := ms.currSliceIdx + 1
 
-		// Close the file and open the next slice
-		if err := ms.closeDataAndIndexFiles(); err != nil {
-			return nil, err
+			// Close the file and open the next slice
+			if err := ms.closeDataAndIndexFiles(); err != nil {
+				return nil, err
+			}
+			// Open the new slice
+			if err := ms.openDataAndIndexFiles(
+				ms.files[nextSlice].fileName,
+				ms.files[nextSlice].idxFName); err != nil {
+				return nil, err
+			}
+			// Success, update the store's variables
+			ms.currSliceIdx = nextSlice
+			ms.wOffset = int64(4)
+
+			fslice = ms.files[ms.currSliceIdx]
 		}
-		// Open the new slice
-		if err := ms.openDataAndIndexFiles(
-			ms.files[nextSlice].fileName,
-			ms.files[nextSlice].idxFName); err != nil {
-			return nil, err
-		}
-		// Success, update the store's variables
-		ms.currSliceIdx = nextSlice
-		ms.wOffset = int64(4)
-
-		fslice = ms.files[ms.currSliceIdx]
 	}
 
 	seq := ms.last + 1
@@ -1469,9 +1473,11 @@ func (ms *FileMsgStore) Store(reply string, data []byte) (*pb.MsgProto, error) {
 	}
 	fslice.lastSeq = seq
 
-	// Enfore limits and update file slice if needed.
-	if err := ms.enforceLimits(); err != nil {
-		return nil, err
+	if maxMsgs > 0 && maxBytes > 0 {
+		// Enfore limits and update file slice if needed.
+		if err := ms.enforceLimits(); err != nil {
+			return nil, err
+		}
 	}
 	return m, nil
 }
