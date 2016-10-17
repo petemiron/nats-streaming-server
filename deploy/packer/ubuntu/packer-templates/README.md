@@ -18,6 +18,15 @@ Add the built box to Vagrant:
 
     $ vagrant box add archlinux-x86_64 archlinux-x86_64-virtualbox.box
 
+Create the box in Vagrant:
+
+    $ vagrant up
+
+SSH into the box using Vagrant:
+
+    $ vagrant ssh
+
+
 ## Configuration
 
 You can configure each template to match your requirements by setting the following [user variables](https://packer.io/docs/templates/user-variables.html).
