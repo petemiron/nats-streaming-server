@@ -1,0 +1,18 @@
+[Unit]
+Description=NATS Streaming Daemon insecure
+After=network.target
+ConditionPathExists=!/etc/nats/disable-systemd
+
+[Service]
+PIDFile=/var/run/natsd.pid
+# EnvironmentFile=/etc/default/nats-streaming-server
+WorkingDirectory=/opt/
+ExecStart=/opt/nats-streaming-server $GNATSD_CLEAR_BASE_OPTIONS $GNATSD_CLEAR_LOG_OPTIONS
+Restart=always
+OOMScoreAdjust=-999
+LimitNOFILE=64000
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
