@@ -82,10 +82,13 @@
   }],
   "provisioners": [{
     "type": "file",
-    "source": "scripts/nats/systemd/natsd.service",
-    "destination": "natsd.service"
-  },
-  {
+    "source": "scripts/nats/etc",
+    "destination": "./etc"
+  }, {
+    "type": "file",
+    "source": "scripts/nats/home",
+    "destination": "./home"
+  }, {
     "type": "shell",
     "scripts": [
       "scripts/ubuntu/apt.sh",
