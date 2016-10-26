@@ -4,7 +4,7 @@ SERVICE_NAME=natssd
 # update apt
 sudo apt-get update
 # install required libs
-sudo apt-get -y install unzip rsync
+sudo apt-get -y install unzip rsync nfs-common
 # download nats
 curl -L https://github.com/nats-io/nats-streaming-server/releases/download/v0.2.0/nats-streaming-server-linux-amd64.zip > ./nats-streaming-server-linux-amd64.zip
 

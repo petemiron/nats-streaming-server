@@ -1,5 +1,4 @@
 #!/bin/bash
-sudo apt-get update
 sudo apt-get install -y golang 
 git clone https://github.com/ColinSullivan1/nats-testing.git 
 echo 'export GOPATH=/go' >> /home/ubuntu/.profile
