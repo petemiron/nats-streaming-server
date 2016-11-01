@@ -1,5 +1,4 @@
 # Overview
- 
 Creates a base NATS server, VPC and security groups.
 
 # Securing
