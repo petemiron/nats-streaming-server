@@ -1,6 +1,3 @@
-# WARNING!
-This is setup to be destructive at the moment. I will add safeguards to prevent wiping out the file system.
-
 # Overview
 Creates a base NATS server, VPC and security groups.
 
