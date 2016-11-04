@@ -8,7 +8,7 @@ Creates a base NATS server, VPC and security groups.
 First, you need to build your NATS aws packer [ami](../packer/ubuntu/packer-templates/). 
 Using that AMI, update terraform.tfvars with the correct AMIs.
 
-```json
+```
 region = "us-east-1"
 ami = {
   # this is a custom AMI built using the nats-aws-ubuntu-16.04.json packer build file
