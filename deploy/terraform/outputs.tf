@@ -1,3 +1,6 @@
+output "ELB Public Name" {
+  value = "${aws_elb.nats.dns_name}"
+}
 output "addresses" {
   value = ["${aws_launch_configuration.web.*.public_ip}"]
 }

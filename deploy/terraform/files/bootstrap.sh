@@ -13,20 +13,26 @@ SVC_ID=$SERVICE_NAME-$INSTANCE_ID
 
 # if there aren't already the necessary directories in /nats-data/ create them.
 if [ ! -d /$NATS_DATA_ROOT/$SVC_ID ]; then
-  mkdir -p /$NATS_DATA_ROOT/$SVC_ID/{certs, current, logs, data}
+  mkdir -p /$NATS_DATA_ROOT/$SVC_ID/{certs,current,logs,data}
 
   # if you want to add certs, you should do that here, too. add them to the certs directory.
-
   # create a config file.
   cat << EOL | sudo tee -a /$NATS_DATA_ROOT/$SVC_ID/current/natsservice.conf
-# NATS Streaming Server Config
+# NATS Config
 # Written by bootstrap.sh terraform.
-port: 4222
-http_port: 4444
+listen: 0.0.0.0:4233
+http: 8233
+log_file: "$NATS_DATA_ROOT$SVC_ID/logs/nats.log"
 
 # Define the cluster name.
 # Can be id, cid or cluster_id
 id: "natssd_cluster"
+EOL
+
+  # create a config file.
+  cat << EOL | sudo tee -a /$NATS_DATA_ROOT/$SVC_ID/current/streaming.conf
+# NATS Streaming Server Config
+# Written by bootstrap.sh terraform.
 
 # Store type
 # Can be st, store, store_type or StoreType
@@ -35,7 +41,7 @@ store: "file"
 
 # When using a file store, need to provide the root directory.
 # Can be dir or datastore
-dir: "/$NATS_DATA_ROOT/$SVC_ID/data"
+dir: "$NATS_DATA_ROOT$SVC_ID/data"
 
 # Debug flag.
 # Can be sd or stand_debug
@@ -48,7 +54,7 @@ sv: false
 # If specified, connects to an external NATS server, otherwise
 # starts and embedded server.
 # Can be ns, nats_server or nats_server_url
-ns: "nats://localhost:4222"
+# ns: "nats://localhost:4222"
 
 # This flag creates a TLS connection to the server but without
 # the need to use a TLS configuration (no NATS server certificate verification).
