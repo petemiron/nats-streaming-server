@@ -5,7 +5,7 @@ Creates a base NATS server, VPC and security groups.
 Please test in the development directory. Once you're ready for production, you can update the main.tf there in your fork.
 
 # Build your packer AMI
-First, you need to build your NATS aws packer [ami](../packer/ubuntu/packer-templates/). 
+First, you need to build your NATS aws packer [ami](../packer/). 
 Using that AMI, update terraform.tfvars with the correct AMIs.
 
 ```
