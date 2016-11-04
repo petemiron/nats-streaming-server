@@ -21,12 +21,14 @@ sudo chmod 664 etc/systemd/system/natssd\@.service
 sudo rsync -arv etc/ /etc/
 
 # per instance setup of systemd template
-INSTANCE_ID=1
-SVC_ID=$SERVICE_NAME-$INSTANCE_ID
-sudo useradd -m -d /home/$SVC_ID -s /usr/sbin/nologin -c "$SVC_ID service user." -u 1019 $SVC_ID
-
-# copy everything in ./home/ to /home/service_user
-sudo cp -R home/* /home/$SVC_ID
-sudo chown $SVC_ID:$SVC_ID -R /home/$SVC_ID 
-
-sudo systemctl enable $SERVICE_NAME\@$INSTANCE_ID.service
+# Moving this setup to a terraform
+# expects /nats-data/svc_id-instance_id to be configured similar to below.
+# INSTANCE_ID=1
+# SVC_ID=$SERVICE_NAME-$INSTANCE_ID
+# sudo useradd -m -d /home/$SVC_ID -s /usr/sbin/nologin -c "$SVC_ID service user." -u 1019 $SVC_ID
+# 
+# # copy everything in ./home/ to /home/service_user
+# sudo cp -R home/* /home/$SVC_ID
+# sudo chown $SVC_ID:$SVC_ID -R /home/$SVC_ID 
+# 
+# sudo systemctl enable $SERVICE_NAME\@$INSTANCE_ID.service

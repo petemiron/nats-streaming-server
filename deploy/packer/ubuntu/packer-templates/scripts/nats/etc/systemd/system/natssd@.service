@@ -5,7 +5,7 @@ ConditionPathExists=!/etc/%p/disable-systemd
 
 [Service]
 PIDFile=/var/run/%p-%i.pid
-WorkingDirectory=/home/%p-%i
+WorkingDirectory=/nats-data/%p-%i
 ExecStart=/opt/nats-streaming-server -c current/natsservice.conf
 Restart=always
 OOMScoreAdjust=-999
