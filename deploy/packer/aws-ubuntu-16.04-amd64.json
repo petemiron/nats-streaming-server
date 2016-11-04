@@ -23,5 +23,8 @@
     "scripts": [
       "scripts/nats/setup.sh"
     ]
+  }, {
+    "type": "shell",
+    "inline": ["sudo reboot"]
   }]
 }

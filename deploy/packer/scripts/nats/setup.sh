@@ -35,6 +35,3 @@ sudo rsync -arv etc/ /etc/
 
 # upgrade ubuntu
 sudo apt-get -qq -y dist-upgrade 
-# reboot
-sudo service network-manager stop
-sudo reboot
