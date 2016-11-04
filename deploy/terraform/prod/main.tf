@@ -1,0 +1,3 @@
+module "nats" {
+  source = "../nats/"
+}
