@@ -1,5 +1,21 @@
+# WARNING!
+This is setup to be destructive at the moment. I will add safeguards to prevent wiping out the file system.
+
 # Overview
 Creates a base NATS server, VPC and security groups.
+
+# Build your packer AMI
+First, you need to build your NATS aws packer [ami](../packer/ubuntu/packer-templates/). 
+Using that AMI, update terraform.tfvars with the correct AMIs.
+
+```json
+region = "us-east-1"
+ami = {
+  # this is a custom AMI built using the nats-aws-ubuntu-16.04.json packer build file
+  us-east-1 = "ami-[Your New AMI ID]"
+}
+
+```
 
 # Securing
 
@@ -29,4 +45,5 @@ Warning: this will create billable AWS resources.
 terraform apply -var 'admin_cidr=["[ip_address]/1"]'
 ```
 
-# LICENSE MIT
+# LICENSE
+MIT
