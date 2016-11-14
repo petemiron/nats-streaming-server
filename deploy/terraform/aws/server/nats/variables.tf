@@ -3,11 +3,10 @@ variable "region" {
 }
 variable "key_name" {
   description = "The AWS key pair to use for resources."
-  default = "aws"
 }
 variable "admin_cidr" {
   description = "public ranges IP for admin."
-  default = ["0.0.0.0/0"]
+#  default = "0.0.0.0/0"
 }
 variable "ami" {
   type = "map"

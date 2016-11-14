@@ -14,7 +14,7 @@ resource "aws_security_group" "nats_service_custom_group" {
     from_port   = 8233 
     to_port     = 8233
     protocol    = "tcp"
-    cidr_blocks = "${var.admin_cidr}"
+    cidr_blocks = "${split(",", var.admin_cidr)}"
   }
 
   # outbound internet access
@@ -29,13 +29,13 @@ resource "aws_security_group" "nats_service_custom_group" {
 
 resource "aws_security_group" "nats_service_host_group" {
   name        = "nats_streaming_host"
-  description = "Allow SSH & HTTP to web hosts"
+  description = "Allow SSH & HTTP to hosts"
   vpc_id      = "${module.vpc.vpc_id}"
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = "${var.admin_cidr}"
+    cidr_blocks = "${split(",", var.admin_cidr)}"
   }
 }

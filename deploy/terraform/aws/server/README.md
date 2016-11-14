@@ -25,16 +25,17 @@ To prevent instance ssh and admin consoles being accessible from any IP address
 Get your local IP Address:
 
 ``` bash
-curl http://checkip.amazonaws.com/
+export ADMIN_CIDR=`curl http://checkip.amazonaws.com/`
 ```
 
 Then, use that network to set the admin_cidr var list. Or update with your own management network and appropriate CIDR.
 
 
 # Plan the terraform
+Set key_name to the name of the AWS key pair you want to use to access your AWS instances.
 
 ``` bash
-terraform plan -var 'admin_cidr=["[ip_address]/1"]'
+terraform plan -var "admin_cidr=[\"$ADMIN_CIDR/1\"]" -var "key_name=aws"
 
 ```
 
@@ -43,7 +44,7 @@ terraform plan -var 'admin_cidr=["[ip_address]/1"]'
 Warning: this will create billable AWS resources.
  
 ``` bash
-terraform apply -var 'admin_cidr=["[ip_address]/1"]'
+terraform apply -var "admin_cidr=[\"$ADMIN_CIDR/1\"]" -var "key_name=aws"
 ```
 
 # Connecting to your instance
@@ -54,7 +55,3 @@ ELB Public Name = nats-elb-?.us-east-1.elb.amazonaws.com
 
 # Failover timing
 If an instance fails, the autoscale group will automatically restart the instance. Do *not* run more than 1 instance at a time against the EFS.
-
-
-# LICENSE
-MIT
