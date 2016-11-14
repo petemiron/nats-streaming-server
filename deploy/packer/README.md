@@ -33,7 +33,7 @@ packer build aws-ubuntu-16.04-amd64.json
 ```
 
 # Deploying the AWS build
-A reference template terraform is provided [here](../terraform/) for AWS.
+A reference template terraform is provided [here](../terraform/aws/server) for AWS.
 
 
 ## Configuration
