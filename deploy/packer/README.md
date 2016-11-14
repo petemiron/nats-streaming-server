@@ -4,11 +4,7 @@
 
 ## Usage
 
-Clone the repository:
-
-    $ git clone https://github.com/kaorimatz/packer-templates && cd packer-templates
-
-Build a machine image from the template in the repository:
+Build a local NATS machine image from the template in the repository:
 
 ```
 packer build -only=virtualbox-iso ubuntu-16.04-amd64.json
@@ -29,11 +25,15 @@ SSH into the box using Vagrant:
     $ vagrant ssh
 
 # Running the AWS build
-This assumes you've installed and configured aws command line tools on the same box you're running your build from.
+This assumes you've installed and configured [aws command line tools](https://aws.amazon.com/cli/) 
+on the same box you're running your build from.
 
 ```
 packer build aws-ubuntu-16.04-amd64.json
 ```
+
+# Deploying the AWS build
+A reference template terraform is provided [here](../terraform/) for AWS.
 
 
 ## Configuration
@@ -55,8 +55,3 @@ Build an uncompressed Arch Linux vagrant box with a 4GB hard disk using the Virt
 
     $ packer build -only=virtualbox-iso -var compression_level=0 -var disk_size=4000 archlinux-x86_64.json
 
-## Pre-built Boxes
-
-You can also use the pre-built boxes hosted on [Atlas](https://atlas.hashicorp.com/kaorimatz).
-
-    $ vagrant box add kaorimatz/archlinux-x86_64
